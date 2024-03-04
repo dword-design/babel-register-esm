@@ -1,6 +1,6 @@
 {
   "name": "@dword-design/babel-register-esm",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "ESM loader for Babel, similar to @babel/register",
   "type": "module",
   "exports": "./dist/babel-register-esm.js",
