@@ -117,6 +117,7 @@ export async function transformSource(source, context, defaultTransformSource) {
     await babel.transformAsync(stringSource, {
       sourceType: 'module',
       filename: fileURLToPath(url),
+      rootMode: 'upward-optional',
     })
   )?.code
 
