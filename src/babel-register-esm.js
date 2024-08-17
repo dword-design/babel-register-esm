@@ -66,7 +66,7 @@ export async function getFormat(url, context, defaultGetFormat) {
   const urlUrl = new URL(url)
 
   if (urlUrl.protocol === 'file:') {
-    const extension = path.extname(fileURLToPath(url))
+    const extension = path.extname(fileURLToPath(url)) || '.js'
 
     if (SUPPORTED_EXTENSIONS.includes(extension)) {
       return defaultGetFormat(replaceExtension(urlUrl, extension, '.js'), context, defaultGetFormat)
@@ -98,7 +98,7 @@ function replaceExtension(url, fromExtension, toExtension) {
  */
 export async function transformSource(source, context, defaultTransformSource) {
   const {url, format} = context
-  if (format !== 'module' && format !== 'commonjs') {
+  if (url.match(/\/node_modules\//) || (format !== 'module' && format !== 'commonjs')) {
     if (defaultTransformSource) {
       return defaultTransformSource(source, context, defaultTransformSource)
     } else {
@@ -117,6 +117,7 @@ export async function transformSource(source, context, defaultTransformSource) {
     await babel.transformAsync(stringSource, {
       sourceType: 'module',
       filename: fileURLToPath(url),
+      rootMode: 'upward-optional',
     })
   )?.code
 
@@ -138,13 +139,13 @@ export async function transformSource(source, context, defaultTransformSource) {
 export async function load(url, context, nextLoad) {
   const {format, source} = await nextLoad(url, context).catch(async (/** @type {any} */ error) => {
     if (error.code === 'ERR_UNKNOWN_FILE_EXTENSION') {
-      return await nextLoad(url, {...context, format: 'module'})
+      return await nextLoad(url, {...context, format: 'module' })
     } else {
       throw error
     }
   })
 
-  if (source) {
+  if (!url.match(/\/node_modules\//) && source) {
     const transformed = await transformSource(source, {format, url}, undefined)
     if (transformed) {
       return {source: transformed.source, format}
